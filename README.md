@@ -1,198 +1,149 @@
-# 🔥 Aquecedor de Chips - WhatsApp SaaS
+# Mirage WhatsApp Orchestrator
 
-Sistema SaaS para aquecimento automático de números WhatsApp com interface web moderna.
-
-## 🚀 Funcionalidades
-
-- ✅ **Autenticação** - Login/registro via Supabase Auth
-- ✅ **Multi-tenant** - Cada usuário tem seu próprio espaço
-- ✅ **Conexão WhatsApp** - QR Code para conectar números
-- ✅ **Aquecimento Automático** - Rotinas programadas de aquecimento
-- ✅ **Dashboard** - Interface para gerenciar sessões
-- ✅ **Logs** - Histórico de atividades
+Um sistema avançado de automação e orquestração para WhatsApp Business, permitindo conversas inteligentes em escala com IA integrada.
 
 ## 🏗️ Arquitetura
 
-```
-aquecedor-chips/
-├── frontend/          # React + Vite + TailwindCSS
-├── backend/           # Express.js + whatsapp-web.js
-├── shared/            # Tipos e utilitários compartilhados
-└── docs/              # Documentação
-```
+Este é um monorepo que contém:
 
-## 🛠️ Tecnologias
+- **Dashboard** (`apps/dashboard`): Interface web Next.js para gerenciamento
+- **Orchestrator** (`apps/orchestrator`): API NestJS para orquestração de mensagens
+- **Types** (`packages/types`): Tipos TypeScript compartilhados
+- **Shared** (`packages/shared`): Utilitários e validações compartilhadas
 
-### Frontend
-- React 18 + Vite
-- TailwindCSS
-- Zustand (Estado global)
-- React Router
-- Socket.io Client
-- Supabase Auth
+## 🚀 Início Rápido
 
-### Backend
-- Node.js + Express
-- whatsapp-web.js
-- Socket.io
-- Supabase (Database + Auth)
-- Node-cron (Agendamento)
+### Pré-requisitos
 
-## 🚀 Quick Start
+- Node.js 18+
+- pnpm 8+
+- Redis
+- PostgreSQL (via Supabase)
 
-### 1. Clone e instale dependências
+### Instalação
+
+1. Clone o repositório:
 ```bash
-git clone <repo-url>
-cd aquecedor-chips
-npm run install:all
+git clone <repository-url>
+cd mirage-whatsapp-orchestrator
 ```
 
-### 2. Configure variáveis de ambiente
+2. Instale as dependências:
 ```bash
-cp .env.example .env
-# Edite o .env com suas credenciais do Supabase
+pnpm install
 ```
 
-### 3. Configure o Supabase
-
-#### Tabelas necessárias:
-```sql
--- Tabela de tenants
-CREATE TABLE tenants (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  name TEXT NOT NULL,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Tabela de sessões WhatsApp
-CREATE TABLE phone_sessions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-  phone_number TEXT,
-  status TEXT DEFAULT 'disconnected',
-  qr_code TEXT,
-  last_seen TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Tabela de logs
-CREATE TABLE session_logs (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  session_id UUID REFERENCES phone_sessions(id) ON DELETE CASCADE,
-  action TEXT NOT NULL,
-  details JSONB,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-```
-
-#### RLS (Row Level Security):
-```sql
--- Habilitar RLS
-ALTER TABLE tenants ENABLE ROW LEVEL SECURITY;
-ALTER TABLE phone_sessions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE session_logs ENABLE ROW LEVEL SECURITY;
-
--- Políticas de segurança
-CREATE POLICY "Users can only see own tenants" ON tenants
-  FOR ALL USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can only see own sessions" ON phone_sessions
-  FOR ALL USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can only see own logs" ON session_logs
-  FOR ALL USING (
-    EXISTS (
-      SELECT 1 FROM phone_sessions 
-      WHERE phone_sessions.id = session_logs.session_id 
-      AND phone_sessions.user_id = auth.uid()
-    )
-  );
-```
-
-### 4. Execute o projeto
+3. Configure as variáveis de ambiente:
 ```bash
-# Desenvolvimento (frontend + backend)
-npm run dev
+# Dashboard
+cp apps/dashboard/.env.example apps/dashboard/.env.local
 
-# Ou separadamente:
-npm run dev:backend   # http://localhost:3001
-npm run dev:frontend  # http://localhost:5173
-```
-
-## 📁 Estrutura de Arquivos
-
-### Frontend (`/frontend`)
-```
-frontend/
-├── pages/
-│   ├── login.jsx
-│   ├── register.jsx
-│   └── dashboard.jsx
-├── components/
-│   ├── QRCodeCard.jsx
-│   └── SessionStatusCard.jsx
-├── lib/
-│   ├── api.js
-│   ├── auth.js
-│   └── store.js
-└── package.json
+# Orchestrator
+cp apps/orchestrator/.env.example apps/orchestrator/.env
 ```
 
-### Backend (`/backend`)
+4. Configure o banco de dados:
+```bash
+# Execute as migrações do Supabase
+pnpm run db:migrate
 ```
-backend/
-├── routes/
-│   ├── auth.js
-│   └── sessions.js
-├── controllers/
-│   └── sessionController.js
-├── services/
-│   └── waClientManager.js
-├── db/
-│   └── supabase.js
-└── server.js
+
+5. Inicie os serviços de desenvolvimento:
+```bash
+pnpm run dev
 ```
+
+Isso iniciará:
+- Dashboard em http://localhost:3000
+- Orchestrator API em http://localhost:3001
+
+## 📦 Scripts Disponíveis
+
+- `pnpm run dev` - Inicia todos os serviços em modo desenvolvimento
+- `pnpm run build` - Constrói todos os projetos
+- `pnpm run lint` - Executa linting em todos os projetos
+- `pnpm run type-check` - Verifica tipos TypeScript
+- `pnpm run clean` - Limpa arquivos de build
+
+## 🏢 Estrutura do Projeto
+
+```
+.
+├── apps/
+│   ├── dashboard/          # Next.js Dashboard
+│   └── orchestrator/       # NestJS API
+├── packages/
+│   ├── types/             # Tipos compartilhados
+│   └── shared/            # Utilitários compartilhados
+├── .trae/
+│   └── documents/         # Documentação técnica
+└── package.json           # Configuração do monorepo
+```
+
+## 🔧 Configuração
+
+### Dashboard (Next.js)
+
+- **Framework**: Next.js 14 com App Router
+- **Styling**: Tailwind CSS + shadcn/ui
+- **State Management**: Zustand
+- **Forms**: React Hook Form + Zod
+- **Charts**: Recharts
+- **Database**: Supabase Client
+
+### Orchestrator (NestJS)
+
+- **Framework**: NestJS
+- **Database**: PostgreSQL via Supabase
+- **Queue**: BullMQ + Redis
+- **AI**: OpenAI GPT-4
+- **WhatsApp**: Evolution API
+- **Validation**: class-validator + class-transformer
+
+## 📚 Documentação
+
+A documentação técnica completa está disponível em `.trae/documents/`:
+
+- [Documento de Requisitos do Produto](/.trae/documents/product-requirements-document.md)
+- [Documento de Arquitetura Técnica](/.trae/documents/technical-architecture-document.md)
+- [Registros de Decisão de Arquitetura](/.trae/documents/architecture-decision-records.md)
+- [Plano de Release](/.trae/documents/release-plan.md)
+- [Diagramas de Fluxo do Sistema](/.trae/documents/system-flow-diagrams.md)
+- [Análise de Riscos e Mitigação](/.trae/documents/risk-analysis-and-mitigation.md)
 
 ## 🔐 Segurança
 
-- JWT tokens para autenticação
-- RLS (Row Level Security) no Supabase
-- Middleware de autenticação em todas as rotas protegidas
-- Rate limiting nas APIs
-- Validação de dados de entrada
+- Criptografia de dados sensíveis
+- Rate limiting
+- Validação rigorosa de entrada
+- Autenticação JWT
+- Row Level Security (RLS) no Supabase
 
 ## 🚀 Deploy
 
-### Frontend (Vercel/Netlify)
-```bash
-npm run build:frontend
-# Deploy da pasta frontend/dist
-```
+### Dashboard
+- Vercel (recomendado)
+- Netlify
+- Docker
 
-### Backend (Railway/Render/Heroku)
-```bash
-# Configure as variáveis de ambiente
-# Deploy da pasta backend/
-```
-
-## 📝 Próximos Passos
-
-- [ ] Implementar testes unitários
-- [ ] Adicionar monitoramento (logs estruturados)
-- [ ] Implementar cache com Redis
-- [ ] Adicionar webhooks para eventos
-- [ ] Dashboard de analytics
-- [ ] Sistema de billing/assinatura
+### Orchestrator
+- Railway
+- Heroku
+- Docker + Kubernetes
+- VPS com PM2
 
 ## 🤝 Contribuição
 
 1. Fork o projeto
-2. Crie uma branch (`git checkout -b feature/nova-funcionalidade`)
-3. Commit suas mudanças (`git commit -am 'Adiciona nova funcionalidade'`)
-4. Push para a branch (`git push origin feature/nova-funcionalidade`)
+2. Crie uma branch para sua feature (`git checkout -b feature/AmazingFeature`)
+3. Commit suas mudanças (`git commit -m 'Add some AmazingFeature'`)
+4. Push para a branch (`git push origin feature/AmazingFeature`)
 5. Abra um Pull Request
 
 ## 📄 Licença
 
-MIT License - veja o arquivo [LICENSE](LICENSE) para detalhes.
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## 📞 Suporte
+
+Para suporte, abra uma issue no GitHub ou entre em contato através do email de suporte.

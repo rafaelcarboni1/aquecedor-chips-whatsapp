@@ -1,29 +1,24 @@
 {
-  "name": "aquecedor-chips",
-  "version": "1.0.0",
-  "description": "SaaS para aquecimento automático de números WhatsApp",
+  "name": "mirage-whatsapp-orchestrator",
   "private": true,
-  "workspaces": [
-    "frontend",
-    "backend"
-  ],
+  "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "dev:frontend": "npm run dev --workspace=frontend",
-    "dev:backend": "npm run dev --workspace=backend",
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
-    "build:frontend": "npm run build --workspace=frontend",
-    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend",
-    "clean": "rm -rf node_modules frontend/node_modules backend/node_modules"
+    "dev": "concurrently \"pnpm --filter dashboard dev\" \"pnpm --filter orchestrator dev\"",
+    "build": "pnpm --filter dashboard build && pnpm --filter orchestrator build",
+    "lint": "pnpm --filter '*' lint",
+    "type-check": "pnpm --filter '*' type-check",
+    "clean": "pnpm --filter '*' clean"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0",
+    "dotenv": "^16.4.5"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
-  },
-  "keywords": [
-    "whatsapp",
-    "saas",
-    "automation",
-    "monorepo"
-  ],
-  "author": "Rafael Carboni",
-  "license": "MIT"
+    "@types/node": "^22.15.30",
+    "concurrently": "^9.2.0",
+    "eslint": "^9.25.0",
+    "prettier": "^3.0.0",
+    "typescript": "~5.8.3"
+  }
 }
