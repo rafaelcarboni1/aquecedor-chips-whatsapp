@@ -15,10 +15,11 @@ lerna-debug.log*
 .env.production.local
 
 # Build outputs
-dist/
 build/
-*/dist/
 */build/
+# Keep frontend dist for Vercel deployment
+# dist/
+# */dist/
 
 # WhatsApp sessions
 wa_sessions/
